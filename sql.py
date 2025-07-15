@@ -1,5 +1,6 @@
 from getpass import getpass
 from mysql.connector import connect, Error
+from enc_dec import *
 
 PATH = 'C:\\Users\\basda\\OneDrive\\Рабочий стол\\password.txt'
 PAS = open(PATH).readline()
@@ -36,11 +37,11 @@ except Error as e:
 def insert(table, colums, values):
     c, v = '', ''
     for s in colums:
-        c += s+', '
-    c = c[:-1]
+        c += f'{s}, '
+    c = c[:-2]
     for s in values:
-        v += s+', '
-    v = v[:-1]
+        v += f'"{s}", '
+    v = v[:-2]
 
     try:
         with connect(
@@ -51,7 +52,7 @@ def insert(table, colums, values):
         ) as connection:
             with connection.cursor() as cursor:
                 comand = f'''insert {table} ({c})
-values ("1967855723", 'huy')'''
+values ({v})'''
                 cursor.execute(comand)
                 connection.commit()
     except Error as e:
@@ -90,62 +91,8 @@ values ("{user_id}", "{username}")'''
 
     return(ret)
 
-def decryption(text, cipher):
-    cipher = list(map(int, cipher.split(',')))
-    questions = []
-    answers = []
-    indx = 0
-    piece = 0
-
-    length = cipher[piece]
-    for l in cipher[piece + 1:piece + 1 + length]:
-        questions.append(text[indx:indx + l])
-        indx += l
-    piece += length + 1
-    
-    while piece < len(cipher):
-        length = cipher[piece]
-        if length == 0:
-            answers.append(0)
-            piece += 1
-        else:
-            answer = []
-            for l in cipher[piece + 1:piece + 1 + length]:
-                answer.append(text[indx:indx + l])
-                indx += l
-            answers.append(answer)
-            piece += length + 1
-    
-    return([questions, answers])
 
 
-def encryption(questions, answers, true = None):
-
-    cipher = f'{len(questions)},'
-    for question in questions:
-        cipher += f'{len(question)},'
-    for answer in answers:
-        if (answer == 0):
-            cipher += f'0,'
-        else:
-            cipher += f'{len(answer)},'
-            for variant in answer:
-                cipher += f'{len(variant)},'
-    cipher = cipher[:-1]
-
-    text = ''
-    for q in questions:
-        text += q
-    for a in answers:
-        if a != 0:
-            for answer in a:
-                text += answer
-
-    return([text, cipher])
-
-
-def insert_test(questions, answers, true = None):
+def insert_test(user_id, name, questions, answers, true = None):
     enc = encryption(questions, answers, true)
-    denc = decryption(enc[0], enc[1])
-    print(enc)
-    print(denc)
+    insert('tests', ['user_id', 'name', 'text', 'cipher'], [user_id, name, enc[0], enc[1]])

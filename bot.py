@@ -29,7 +29,11 @@ async def echo_message(message):
         creators.add(message.from_user.id)
         await bot.send_message(message.chat.id, 'Давайте начнем!\n\nВведите название теста:')
     elif (message.from_user.id in creators):
-        create_test(message)
+        if create_test(message):
+            creators.remove(message.from_user.id)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+            markup.add('Создать тест', 'Мои тесты', 'Друзья', row_width=1)
+            await bot.send_message(message.chat.id, 'Готово!')
     else:
         await bot.send_message(message.chat.id, 'Не понял вас')
 

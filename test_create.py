@@ -4,6 +4,9 @@ from sql import *
 create_now = set()
 tests = {}
 def create_test(m = 0, call = 0):
+
+    is_done = False
+
     if m:
         user_id = m.from_user.id
         str_user_id = str(user_id)
@@ -32,7 +35,7 @@ def create_test(m = 0, call = 0):
                         tests[str_user_id][3].append(0)
                         tests[str_user_id][4] = 1
                         if (tests[str_user_id][1] == 1):
-                            tests[str_user_id][6].append(0)
+                            tests[str_user_id][6].append([0])
                         send(user_id, 'Напишите следующий вопрос или завершите создание теста, написав "Завершить создание"', ['Завершить создание'])
                     else:
                         send(user_id, 'Отправляйте ответы отдельными сообщениям. Если захотети добавить вопрос или завершить создание, нажмите на соответствующую кнопку', ['Добавить вопрос', 'Завершить создание'])  
@@ -41,17 +44,14 @@ def create_test(m = 0, call = 0):
                     tests[str_user_id][3][-1].append(text)
                 else:
                     if (text == 'Добавить вопрос' or tests[str_user_id][5] or (text == 'Завершить создание' and tests[str_user_id][1] != 3 and tests[str_user_id][1] == 1 and len(tests[str_user_id][3]) > len(tests[str_user_id][6]) and tests[str_user_id][5] == 0)):
-                        print(2222)
                         if (len(tests[str_user_id][3][-1]) == 0):
-                            print(1)
                             tests[str_user_id][3][-1] = 0
                             tests[str_user_id][4] = 1
                             tests[str_user_id][5] = 0
                             if (tests[str_user_id][1] == 1):
-                                tests[str_user_id][6].append(0)
+                                tests[str_user_id][6].append([0])
                             send(user_id, 'Напишите следующий вопрос или завершите создание теста, написав "Завершить создание"', ['Завершить создание'])
                         else:
-                            print(2)
                             if (tests[str_user_id][1] == 1 and len(tests[str_user_id][3]) > len(tests[str_user_id][6]) and tests[str_user_id][5] == 0 or (text == 'Завершить создание' and tests[str_user_id][1] != 3 and tests[str_user_id][1] == 1 and len(tests[str_user_id][3]) > len(tests[str_user_id][6]) and tests[str_user_id][5] == 0)):
                                 send(user_id, 'Сначала укажи номер правильного ответа.\n\n(нумерация идет с первого,если ответов несколько, но напиши их через пробел: "1 2 3")')
                                 tests[str_user_id][5] = 1
@@ -72,8 +72,7 @@ def create_test(m = 0, call = 0):
                             if (tests[str_user_id][3][-1] != 0 and len(tests[str_user_id][3][-1]) == 0):
                                 tests[str_user_id][3][-1] = 0
                                 if (tests[str_user_id][1] == 1):
-                                    tests[str_user_id][6].append(0)
-                            print(111111111)
+                                    tests[str_user_id][6].append([0])
                             send(user_id, 'Проверте, правильно ли я вас понял и подтвердите заверешение создания:')
                             test = f'''{tests[str_user_id][0]}
 '''
@@ -95,10 +94,13 @@ def create_test(m = 0, call = 0):
                         else:
                             if text == 'Завершить создание':
                                 if len(tests[str_user_id]) == 7:
-                                    insert_test(tests[str_user_id][2], tests[str_user_id][3], tests[str_user_id][6])
+                                    insert_test(str_user_id, tests[str_user_id][0], tests[str_user_id][2], tests[str_user_id][3], tests[str_user_id][6])
                                 else:
-                                    insert_test(tests[str_user_id][2], tests[str_user_id][3])
+                                    insert_test(str_user_id, tests[str_user_id][0], tests[str_user_id][2], tests[str_user_id][3])
+                                create_now.remove(user_id)
+                                tests.pop(str_user_id, None)
+                                is_done = True
 
                         
                     
-    print(tests)
+    return(is_done)

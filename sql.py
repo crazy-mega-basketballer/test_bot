@@ -96,3 +96,28 @@ values ("{user_id}", "{username}")'''
 def insert_test(user_id, name, questions, answers, true = None):
     enc = encryption(questions, answers, true)
     insert('tests', ['user_id', 'name', 'text', 'cipher'], [user_id, name, enc[0], enc[1]])
+
+
+
+def select(table, colums = '*', where = ''):
+    ret = []
+    try:
+        with connect(
+            host='localhost',
+            user='root',
+            password=f"{PAS}",
+            database='test_bot',
+        ) as connection:
+            with connection.cursor() as cursor:
+                comand = f'''SELECT {colums} FROM {table}'''
+                if where != '':
+                    comand += f'''
+WHERE {where}'''
+                cursor.execute(comand)
+                ret = cursor.fetchall()
+    except Error as e:
+        print('Eror: ', e)
+    
+    return(ret)
+
+#dima gey loh pidor evrey i tak dalee

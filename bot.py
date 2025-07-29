@@ -86,12 +86,12 @@ async def echo_message(message):
             if (testers[message.from_user.id]['start'] == 0 and message.text == 'Да'):
                 testers[message.from_user.id]['start'] == int(time.time())
                 await bot.send_message(message.chat.id, 'Супер, тогда начнем!')
-                passing(message.chat.id, testers[message.from_user.id]['test_id'])
+                passing(message.chat.id, testers[message.from_user.id]['test_id'], message.text)
             elif (testers[message.from_user.id]['start'] == 0 and message.text == 'Нет'):
                 testers.pop(message.chat.id, None)
                 await bot.send_message(message.chat.id, 'Ну и похуй мне, я даже не обиделся')
             else:
-                if passing(message.chat.id, testers[message.from_user.id]['test_id']):
+                if passing(message.chat.id, testers[message.from_user.id]['test_id'], message.text):
                     testers.pop(message.chat.id, None)
 
     else:

@@ -67,26 +67,37 @@ def passing(user_id, test_id, message_text):
             print(1)
             try:
                 if tests[test_id]['answers'][user_progress[user_id]['step']] == 0:
-                    user_progress[user_id]['answers'][user_progress[user_id]['step']] == message_text
+                    user_progress[user_id]['answers'][user_progress[user_id]['step']] = message_text
                 else:
-                    user_progress[user_id]['answers'][user_progress[user_id]['step']] == list(map(int, message_text.split()))
+                    user_progress[user_id]['answers'][user_progress[user_id]['step']] = list(map(int, message_text.split()))
                 user_progress[user_id]['step'] = len(user_progress[user_id]['answers'])
-                text += f'''Вопрос {user_progress[user_id]['step'] + 1}/{len(tests[test_id]['questions'])}
 
-{tests[test_id]['questions'][user_progress[user_id]['step']]}'''
-                if (tests[test_id]['answers'][user_progress[user_id]['step']] == 0):
-                    text += f'''
-
-    ***Развернутый ответ'''
-                    
-                else:
-                    text += f'''
-
-Варианты ответов:'''
-                    for ans_num in range(len(tests[test_id]['answers'][user_progress[user_id]['step']])):
+                if (user_progress[user_id]['step'] < len(tests[test_id]['questions'])):
+                    text += f'''Вопрос {user_progress[user_id]['step'] + 1}/{len(tests[test_id]['questions'])}
+    
+    {tests[test_id]['questions'][user_progress[user_id]['step']]}'''
+                    if (tests[test_id]['answers'][user_progress[user_id]['step']] == 0):
                         text += f'''
-    {ans_num + 1}) {tests[test_id]['answers'][user_progress[user_id]['step']][ans_num]}'''
+    
+        ***Развернутый ответ'''
+                        
+                    else:
+                        text += f'''
 
+    Варианты ответов:'''
+                        for ans_num in range(len(tests[test_id]['answers'][user_progress[user_id]['step']])):
+                            text += f'''
+        {ans_num + 1}) {tests[test_id]['answers'][user_progress[user_id]['step']][ans_num]}'''
+                            
+                    user_progress[user_id]['step'] += 1
+                else:
+                    if (len(user_progress[user_id]['answers']) != len(tests[test_id]['questions'])):
+                        text = 'Возникла ошибка, попробуй снова.'
+
+                    else:
+                        user_progress[user_id]['step'] = -2
+                        text = f'''Хотите завершить прохождение?'''
+    
             except TypeError as e:
                 print(e)
                 text = 'Возникла ошибка, попробуй снова.'
@@ -113,37 +124,66 @@ def passing(user_id, test_id, message_text):
 
         elif (len(user_progress[user_id]['answers']) == user_progress[user_id]['step'] - 1):
             print(4)
+            print('+++++++++++')
+            print(tests)
+            print(user_progress)
+            print('+++++++++++')
             try:
+                print(5)
                 if tests[test_id]['answers'][user_progress[user_id]['step'] - 1] == 0:
                     user_progress[user_id]['answers'].append(message_text)
                 else:
                     user_progress[user_id]['answers'].append(list(map(int, message_text.split())))
-                text += f'''Вопрос {user_progress[user_id]['step'] + 1}/{len(tests[test_id]['questions'])}
-
-{tests[test_id]['questions'][user_progress[user_id]['step']]}'''
-                if (tests[test_id]['answers'][user_progress[user_id]['step']] == 0):
-                    text += f'''
-
-    ***Развернутый ответ'''
-                    
-                else:
-                    text += f'''
-
-Варианты ответов:'''
-                    for ans_num in range(len(tests[test_id]['answers'][user_progress[user_id]['step']])):
-                        text += f'''
-    {ans_num + 1}) {tests[test_id]['answers'][user_progress[user_id]['step']][ans_num]}'''
+                print(7)
+                if (user_progress[user_id]['step'] < len(tests[test_id]['questions'])):
                         
-                user_progress[user_id]['step'] += 1
+                    text += f'''Вопрос {user_progress[user_id]['step'] + 1}/{len(tests[test_id]['questions'])}
+    
+    {tests[test_id]['questions'][user_progress[user_id]['step']]}'''
+                    print(8)
+                    if (tests[test_id]['answers'][user_progress[user_id]['step']] == 0):
+                        text += f'''
+    
+        ***Развернутый ответ'''
+                        
+                    else:
+                        text += f'''
+    
+    Варианты ответов:'''
+                        for ans_num in range(len(tests[test_id]['answers'][user_progress[user_id]['step']])):
+                            text += f'''
+        {ans_num + 1}) {tests[test_id]['answers'][user_progress[user_id]['step']][ans_num]}'''
+                    print(9)
+                    user_progress[user_id]['step'] += 1
+                else:
+                    print(11)
+                    if (len(user_progress[user_id]['answers']) != len(tests[test_id]['questions'])):
+                        text = 'Возникла ошибка, попробуй снова.'
+
+                    else:
+                        user_progress[user_id]['step'] = -2
+                        text = f'''Хотите завершить прохождение?'''
 
             except TypeError as e:
                 print(e)
+                print(6)
                 text = 'Возникла ошибка, попробуй снова.'
-
+    
+    elif (message_text == 'Вернуться к вопросу'):
+        user_progress[user_id]['step'] = -1
+        text = 'Введите номер вопроса, на который хотите ответить заново. (можно перезаписать ответ только на предыдущие вопросы)'
+    
+    elif (message_text == 'Завершить прохождение'):
+        if (len(user_progress[user_id]['answers']) == len(tests[test_id]['questions']) and user_progress[user_id]['step'] == -2):
+            text = 'Браво, ты справился! (наверное)'
+            ret = True
+        
+        elif (len(user_progress[user_id]['answers']) < len(tests[test_id]['questions']) and user_progress[user_id]['step'] != -2):
+            text = 'Ты не ответил на все вопросы, похуй?'
 
     send(user_id, text, ['Вернуться к вопросу', 'Завершить прохождение'])
     print(text)
     print(tests)
     print(user_progress)
-
+    print('----------------------------')
     return(ret)

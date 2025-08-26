@@ -40,7 +40,11 @@ def insert(table, colums, values):
         c += f'{s}, '
     c = c[:-2]
     for s in values:
-        v += f'"{s}", '
+        if type(s) == str:
+            v += f'"{s}", '
+        elif type(s) == int:
+            v += f'{s}, '
+
     v = v[:-2]
 
     try:
@@ -53,6 +57,7 @@ def insert(table, colums, values):
             with connection.cursor() as cursor:
                 comand = f'''insert {table} ({c})
 values ({v})'''
+                print(comand)
                 cursor.execute(comand)
                 connection.commit()
     except Error as e:

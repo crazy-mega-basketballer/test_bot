@@ -6,6 +6,7 @@ from proverka import *
 from sql import *
 from test_create import *
 from passing_test import *
+from notification import *
 
 
 PATH = 'C:\\Users\\basda\\OneDrive\\Рабочий стол\\token.txt'
@@ -23,6 +24,7 @@ testers = {}
 @bot.message_handler(commands=['start'])
 async def welcome(message):
     start(message)
+    print(message.text)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add('Создать тест', 'Мои тесты', 'Друзья', 'Пройти тест', row_width=1)
     await bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=markup)
@@ -63,8 +65,7 @@ async def echo_message(message):
     elif (message.text == 'Пройти тест' and message.from_user.id not in creators and message.from_user.id not in testers):
         testers.update({message.from_user.id : {
             'test_id' : 0,
-            'start' : 0, 
-            'end' : 0
+            'start' : 0
         }})
         await bot.send_message(message.chat.id, 'Введите id теста, который хотите пройти:')
 
@@ -75,7 +76,7 @@ async def echo_message(message):
             if len(test) == 1:
                 testers[message.from_user.id]['test_id'] = message.text
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-                markup.add('Да', 'Нет', 'Назад', row_width=1)
+                markup.add('Да', 'Нет', row_width=1)
                 await bot.send_message(message.chat.id, f'Хотите пройти тест "{test[0][0]}"', reply_markup=markup)
             else:
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -84,23 +85,51 @@ async def echo_message(message):
 
         else:
             if (testers[message.from_user.id]['start'] == 0 and message.text == 'Да'):
-                testers[message.from_user.id]['start'] == int(time.time())
+                testers[message.from_user.id]['start'] = int(time.time())
                 await bot.send_message(message.chat.id, 'Супер, тогда начнем!')
                 passing(message.chat.id, testers[message.from_user.id]['test_id'], message.text)
             elif (testers[message.from_user.id]['start'] == 0 and message.text == 'Нет'):
-                testers.pop(message.chat.id, None)
-                await bot.send_message(message.chat.id, 'Ну и похуй мне, я даже не обиделся')
+                testers.pop(message.from_user.id, None)
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+                markup.add('Создать тест', 'Мои тесты', 'Друзья', 'Пройти тест', row_width=1)
+                await bot.send_message(message.chat.id, 'Ну и похуй мне, я даже не обиделся', reply_markup=markup)
             else:
                 if passing(message.chat.id, testers[message.from_user.id]['test_id'], message.text):
-                    testers.pop(message.chat.id, None)
+                    passing_time = int(time.time()) - testers[message.from_user.id]['start']
+                    time_text = ''
+                    if (passing_time < 60):
+                        time_text = f'00:{passing_time}'
+                    else:
+                        time_text = f'{passing_time//60}:{passing_time%60}'
+                    try:
+                        with connect(
+                            host="localhost",
+                            user="root",
+                            password=f"{PAS}",
+                            database="test_bot",
+                        ) as connection:
+                            with connection.cursor() as cursor:
+                                comand = f'''UPDATE passings
+SET time = '{time_text}'
+WHERE tester_id = '{message.chat.id}' and test_id = {testers[message.from_user.id]['test_id']};'''
+                                cursor.execute(comand)
+                                connection.commit()
+                    except Error as e:
+                        print('Eror: ', e)
+                    pa
+                    testers.pop(message.from_user.id, None)
+                    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+                    markup.add('Создать тест', 'Мои тесты', 'Друзья', 'Пройти тест', row_width=1)
+                    await bot.send_message(message.chat.id, 'Главное меню', reply_markup=markup)
 
     else:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         markup.add('Создать тест', 'Мои тесты', 'Друзья', 'Пройти тест', row_width=1)
         if (message.text == 'Назад'):
             await bot.send_message(message.chat.id, 'Главное меню', reply_markup=markup)
-            testers.pop(message.chat.id, None)
+            testers.pop(message.from_user.id, None)
         else:
+            print(message.text)
             await bot.send_message(message.chat.id, 'Не понял вас', reply_markup=markup)
 
 asyncio.run(bot.polling())

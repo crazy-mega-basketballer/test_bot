@@ -1,4 +1,4 @@
-def encryption(questions, answers, true):
+def encryption(questions, answers, true = None):
 
     cipher = f'{len(questions)},'
     for question in questions:

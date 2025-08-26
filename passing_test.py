@@ -176,10 +176,51 @@ def passing(user_id, test_id, message_text):
     elif (message_text == 'Завершить прохождение'):
         if (len(user_progress[user_id]['answers']) == len(tests[test_id]['questions']) and user_progress[user_id]['step'] == -2):
             text = 'Браво, ты справился! (наверное)'
+            answers = ''
+            for ans in user_progress[user_id]['answers']:
+                if (type(ans) == str):
+                    answers += f"'{ans}'~|~"
+                else:
+                    for i in ans:
+                        answers += f'{i} '
+                    answers = answers[:-1]
+                    answers += f'~|~'
+            answers = answers[:-3]
+
+            if len(select('passings', where = f'tester_id = "{user_id}" and test_id = {test_id}')) > 0:
+                try:
+                    with connect(
+                        host="localhost",
+                        user="root",
+                        password=f"{PAS}",
+                        database="test_bot",
+                    ) as connection:
+                        with connection.cursor() as cursor:
+                            comand = f'''UPDATE passings
+SET answers = '{answers}'
+WHERE tester_id = "{user_id}" and test_id = {test_id};'''
+                            cursor.execute(comand)
+                            connection.commit()
+                except Error as e:
+                    print('Eror: ', e)
+
+            else:
+                insert('passings', ['tester_id', 'test_id', 'answers'], [str(user_id), int(test_id), answers])
+
+            user_progress.pop(user_id, None)
+            tests[test_id]['pas_now'] -= 1
+            if tests[test_id]['pas_now'] == 0:
+                tests.pop(test_id, None)
             ret = True
         
         elif (len(user_progress[user_id]['answers']) < len(tests[test_id]['questions']) and user_progress[user_id]['step'] != -2):
             text = 'Ты не ответил на все вопросы, похуй?'
+            for answer in range(len(user_progress[user_id]['answers']), len(tests[test_id]['questions'])):
+                if (tests[test_id]['answers'][answer] == 0):
+                    user_progress[user_id]['answers'].append('')
+                else:
+                    user_progress[user_id]['answers'].append([0])
+            user_progress[user_id]['step'] = -2
 
     send(user_id, text, ['Вернуться к вопросу', 'Завершить прохождение'])
     print(text)
